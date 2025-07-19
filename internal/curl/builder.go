@@ -7,19 +7,21 @@ import (
 
 // Builder constructs curl command arguments
 type Builder struct {
-	method  string
-	url     string
-	args    []string
-	headers []string
+	method   string
+	url      string
+	args     []string
+	headers  []string
+	curlArgs []string
 }
 
 // NewBuilder creates a new curl command builder
 func NewBuilder(method, url string) *Builder {
 	b := &Builder{
-		method:  method,
-		url:     url,
-		args:    []string{},
-		headers: []string{},
+		method:   method,
+		url:      url,
+		args:     []string{},
+		headers:  []string{},
+		curlArgs: []string{},
 	}
 
 	// Set method if not GET or HEAD
@@ -72,6 +74,12 @@ func (b *Builder) AddBasicAuth(userPass string) *Builder {
 	return b
 }
 
+// AddCurlArgs adds raw arguments to pass directly to curl
+func (b *Builder) AddCurlArgs(args []string) *Builder {
+	b.curlArgs = append(b.curlArgs, args...)
+	return b
+}
+
 // Build returns the complete curl command arguments
 func (b *Builder) Build() []string {
 	args := []string{}
@@ -84,8 +92,11 @@ func (b *Builder) Build() []string {
 		args = append(args, "--header", h)
 	}
 
-	// Add URL last
+	// Add URL
 	args = append(args, b.url)
+
+	// Add curl arguments last
+	args = append(args, b.curlArgs...)
 
 	return args
 }

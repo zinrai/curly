@@ -11,13 +11,16 @@ var (
 )
 
 var getCmd = &cobra.Command{
-	Use:   "get <url>",
+	Use:   "get <url> [-- <curl-options>...]",
 	Short: "Send GET request",
-	Long:  `Send GET request and optionally save the response to a file.`,
+	Long: `Send GET request and optionally save the response to a file.
+You can pass additional curl options after '--'.`,
 	Example: `  curly get https://example.com
   curly get https://example.com --output output.html
-  curly get https://example.com/file.pdf --output file.pdf`,
-	Args: cobra.ExactArgs(1),
+  curly get https://example.com/file.pdf --output file.pdf
+  curly get https://example.com -- --include
+  curly get https://example.com -- --include --location --max-time 30`,
+	Args: cobra.ArbitraryArgs,
 	RunE: runGet,
 }
 
@@ -26,7 +29,10 @@ func init() {
 }
 
 func runGet(cmd *cobra.Command, args []string) error {
-	url := args[0]
+	url, curlArgs, err := parseArgsWithCurlArgs(args)
+	if err != nil {
+		return err
+	}
 
 	// Build curl command
 	builder := curl.NewBuilder("GET", url)
@@ -52,6 +58,9 @@ func runGet(cmd *cobra.Command, args []string) error {
 	if outputFile != "" {
 		builder.AddOutput(outputFile)
 	}
+
+	// Add curl arguments
+	builder.AddCurlArgs(curlArgs)
 
 	// Execute
 	executor := curl.NewExecutor()

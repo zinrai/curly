@@ -11,6 +11,7 @@ A curl wrapper that simplifies common HTTP operations with an command-line inter
 - File upload/download capabilities
 - Show curl command for learning
 - Verbose mode for debugging
+- **Pass-through curl options after `--`**
 
 ## Requirements
 
@@ -65,6 +66,7 @@ $ curly headers https://example.com
 ```
 
 Follow redirects:
+
 ```bash
 $ curly headers https://bit.ly/example --follow
 ```
@@ -111,6 +113,52 @@ Set User-Agent:
 
 ```bash
 $ curly get https://example.com --user-agent "MyBot/1.0"
+```
+
+### Advanced Usage with Pass-through Options
+
+You can pass any curl option after `--`:
+
+Include response headers in output:
+
+```bash
+$ curly get https://example.com -- --include
+```
+
+Save response headers to file:
+
+```bash
+$ curly get https://example.com -- --dump-header headers.txt
+```
+
+Trace HTTP communication:
+
+```bash
+$ curly get https://example.com -- --trace trace.log
+```
+
+ASCII trace
+
+```bash
+$ curly get https://example.com -- --trace-ascii trace.txt
+```
+
+Combine multiple curl options:
+
+```bash
+$ curly get https://example.com -- --include --location --max-time 30 --compressed
+```
+
+Use with POST:
+
+```bash
+$ curly post https://api.example.com --json '{"test":true}' -- --include --trace-ascii trace.txt
+```
+
+Pass-through with basic auth:
+
+```bash
+$ curly basic-auth https://api.example.com --user admin:pass -- --include --dump-header auth-headers.txt
 ```
 
 ## License

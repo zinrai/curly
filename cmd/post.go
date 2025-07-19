@@ -15,14 +15,17 @@ var (
 )
 
 var postCmd = &cobra.Command{
-	Use:   "post <url>",
+	Use:   "post <url> [-- <curl-options>...]",
 	Short: "Send POST request",
 	Long: `Send POST request with various data formats.
-You can send JSON data, form data, or data from a file.`,
+You can send JSON data, form data, or data from a file.
+Additional curl options can be passed after '--'.`,
 	Example: `  curly post https://api.example.com --json '{"key":"value"}'
   curly post https://api.example.com --data "name=john&age=30"
-  curly post https://api.example.com --file @data.json`,
-	Args: cobra.ExactArgs(1),
+  curly post https://api.example.com --file @data.json
+  curly post https://api.example.com --json '{"key":"value"}' -- --include
+  curly post https://api.example.com -- --data-binary @file.bin`,
+	Args: cobra.ArbitraryArgs,
 	RunE: runPost,
 }
 
@@ -36,7 +39,10 @@ func init() {
 }
 
 func runPost(cmd *cobra.Command, args []string) error {
-	url := args[0]
+	url, curlArgs, err := parseArgsWithCurlArgs(args)
+	if err != nil {
+		return err
+	}
 
 	// Build curl command
 	builder := curl.NewBuilder("POST", url)
@@ -70,6 +76,9 @@ func runPost(cmd *cobra.Command, args []string) error {
 		}
 		builder.AddDataFile(fileData)
 	}
+
+	// Add curl arguments
+	builder.AddCurlArgs(curlArgs)
 
 	// Execute
 	executor := curl.NewExecutor()

@@ -7,19 +7,24 @@ import (
 )
 
 var headersCmd = &cobra.Command{
-	Use:   "headers <url>",
+	Use:   "headers <url> [-- <curl-options>...]",
 	Short: "Get response headers only",
 	Long: `Send HEAD request to get response headers only.
 This is useful for checking server configuration, content type, 
-or redirect locations without downloading the body.`,
+or redirect locations without downloading the body.
+Additional curl options can be passed after '--'.`,
 	Example: `  curly headers https://example.com
-  curly headers https://example.com --follow`,
-	Args: cobra.ExactArgs(1),
+  curly headers https://example.com --follow
+  curly headers https://example.com -- --dump-header headers.txt`,
+	Args: cobra.ArbitraryArgs,
 	RunE: runHeaders,
 }
 
 func runHeaders(cmd *cobra.Command, args []string) error {
-	url := args[0]
+	url, curlArgs, err := parseArgsWithCurlArgs(args)
+	if err != nil {
+		return err
+	}
 
 	// Build curl command for headers only
 	builder := curl.NewBuilder("HEAD", url)
@@ -41,6 +46,9 @@ func runHeaders(cmd *cobra.Command, args []string) error {
 	for _, h := range headers {
 		builder.AddRawHeader(h)
 	}
+
+	// Add curl arguments
+	builder.AddCurlArgs(curlArgs)
 
 	// Execute
 	executor := curl.NewExecutor()

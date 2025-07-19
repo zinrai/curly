@@ -2,12 +2,13 @@ package cmd
 
 import (
 	"fmt"
+	"os"
 
 	"github.com/spf13/cobra"
 )
 
 var (
-	showCommand bool // Print curl command to execute
+	showCommand bool
 	verbose     bool
 	silent      bool
 	headers     []string
